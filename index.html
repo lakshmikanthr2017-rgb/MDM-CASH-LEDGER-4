@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="kn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CANARA BANK PFMS CASH LEDGER</title>
+    <!-- AppsGeyser ಆ್ಯಪ್‌ನಲ್ಲಿ PDF ಡೌನ್‌ಲೋಡ್ ಮಾಡಲು HTML2PDF ಲೈಬ್ರರಿ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 10px; }
+        .excel-container { background: #fff; border: 1px solid #d4d4d4; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 4px; }
+        
+        .editable-header { text-align: center; color: #107c41; margin-bottom: 2px; font-weight: bold; padding: 4px; border: 1px dashed transparent; outline: none; font-size: 22px; }
+        .editable-school { text-align: center; font-weight: bold; margin-bottom: 2px; font-size: 15px; color: #333; padding: 4px; border: 1px dashed transparent; outline: none; }
+        .prepared-by { text-align: center; font-weight: bold; font-size: 12px; color: #555; margin-bottom: 12px; }
+        
+        .editable-header:hover, .editable-school:hover { border: 1px dashed #107c41; background-color: #f0fdf4; cursor: pointer; }
+        .editable-header:focus, .editable-school:focus { border: 1px solid #107c41; background-color: #fff; }
+
+        .toolbar { margin-bottom: 12px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn { background: #107c41; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; display: flex; align-items: center; gap: 5px; }
+        .btn:hover { background: #0b582e; }
+        .btn-danger { background: #d32f2f; }
+        .btn-danger:hover { background: #9a0007; }
+
+        .table-wrapper { overflow-x: auto; max-width: 100%; border: 1px solid #107c41; }
+        table { border-collapse: collapse; width: 100%; font-size: 11px; min-width: 1500px; }
+        th, td { border: 1px solid #c0c0c0; padding: 2px 4px; text-align: center; height: 26px; }
+        
+        th { background-color: #107c41; color: white; font-weight: bold; font-size: 11px; }
+        .receipt-header { background-color: #1b5e20; font-size: 13px; }
+        .expense-header { background-color: #b71c1c; font-size: 13px; }
+        
+        th[contenteditable="true"] { outline: none; transition: background 0.2s; }
+        th[contenteditable="true"]:hover { background-color: #145a32; cursor: pointer; }
+        th[contenteditable="true"]:focus { background-color: #ffffff; color: #000; }
+
+        .lbl-pra { background-color: #e8f5e9; font-weight: bold; text-align: left; padding-left: 6px; color: #1b5e20; }
+        .lbl-jama { background-color: #e8f5e9; font-weight: bold; text-align: left; padding-left: 6px; color: #1b5e20; }
+        .lbl-ottu { background-color: #c8e6c9; font-weight: bold; text-align: left; padding-left: 6px; color: #0d5314; }
+        
+        .lbl-kharchu { background-color: #ffebee; font-weight: bold; text-align: left; padding-left: 6px; color: #b71c1c; }
+        .lbl-antim { background-color: #ffcdd2; font-weight: bold; text-align: left; padding-left: 6px; color: #801313; }
+
+        input { width: 100%; height: 100%; border: none; outline: none; text-align: center; font-size: 11px; background: transparent; font-family: inherit; }
+        input[type="number"] { -moz-appearance: textfield; }
+        input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input:focus { background-color: #e8f0fe; font-weight: bold; }
+        
+        .val-cell { font-weight: bold; }
+        .bg-calc { background-color: #fdfdfd; }
+        .bg-highlight { background-color: #e8f5e9; font-weight: bold; color: #1b5e20; }
+        .bg-exp-pra { background-color: #e8f5e9; font-weight: bold; color: #0d5314; }
+        .bg-closing { background-color: #ffebee; font-weight: bold; color: #b71c1c; }
+        .divider-col { background: #aaa; width: 6px; }
+
+        .block-separator { border-bottom: 2px solid #107c41 !important; }
+
+        @media print {
+            .toolbar { display: none !important; }
+            body { margin: 0; background: white; }
+            .excel-container { box-shadow: none; border: none; padding: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="excel-container" id="printableArea">
+    <div id="hdrTitle" class="editable-header" contenteditable="true" onblur="saveToStorage()" title="ಎಡಿಟ್ ಮಾಡಲು ಕ್ಲಿಕ್ ಮಾಡಿ">CANARA BANK PFMS CASH LEDGER 2025-26</div>
+    <div id="hdrSchool" class="editable-school" contenteditable="true" onblur="saveToStorage()" title="ಎಡಿಟ್ ಮಾಡಲು ಕ್ಲಿಕ್ ಮಾಡಿ">SCHOOL NAME : GLPS BANDREHALLI THANDYA</div>
+    <!-- Prepared By Line -->
+    <div class="prepared-by">Prepared by LAKSHMIKANTH R (9844444871)</div>
+
+    <div class="toolbar">
+        <button class="btn" onclick="addNewBlock()">➕ ಹೊಸ ಎಂಟ್ರಿ ಸಾಲು ಸೇರಿಸಿ (Add Section)</button>
+        <button class="btn" onclick="manualSave()">💾 ಡೇಟಾ ಸೇವ್ ಮಾಡಿ (Save)</button>
+        <button class="btn" onclick="generatePDF()">📄 PDF / ಪ್ರಿಂಟ್ ಡೌನ್‌ಲೋಡ್</button>
+        <button class="btn btn-danger" onclick="resetLedger()">🔄 ಹೊಸದಾಗಿ ಪ್ರಾರಂಭಿಸಿ (Reset All)</button>
+    </div>
+
+    <div class="table-wrapper">
+        <table id="excelTable">
+            <thead>
+                <tr>
+                    <th colspan="14" class="receipt-header">ಜಮಾ / ರಸೀದಿ (RECEIPTS)</th>
+                    <th class="divider-col"></th>
+                    <th colspan="14" class="expense-header">ಖರ್ಚು / ಪಾವತಿ (EXPENSES)</th>
+                </tr>
+                <tr id="grantHeaders">
+                    <th style="width: 80px;">DATE</th>
+                    <th style="width: 100px;">ವಿವರಗಳು</th>
+                    <th contenteditable="true" oninput="syncGrantHeader(0, this.innerText)" onblur="saveToStorage()">SCHOOL GRANT</th>
+                    <th contenteditable="true" oninput="syncGrantHeader(1, this.innerText)" onblur="saveToStorage()">PTA MEETING</th>
+                    <th contenteditable="true" oninput="syncGrantHeader(2, this.innerText)" onblur="saveToStorage()">ECO CLUB</th>
+                    <th contenteditable="true" oninput="syncGrantHeader(3, this.innerText)" onblur="saveToStorage()">LBA GRANT</th>
+                    <th contenteditable="true" oninput="syncGrantHeader(4, this.innerText)" onblur="saveToStorage()">UDISE+</th>
+                    <th contenteditable="true" oninput="syncGrantHeader(5, this.innerText)" onblur="saveToStorage()">SDMC TRG</th>
+                    <th contenteditable="true" oninput="syncGrantHeader(6, this.innerText)" onblur="saveToStorage()">LIBRARY</th>
+                    <th contenteditable="true" oninput="syncGrantHeader(7, this.innerText)" onblur="saveToStorage()">TLM GRANT</th>
+                    <th contenteditable="true" oninput="syncGrantHeader(8, this.innerText)" onblur="saveToStorage()">GRANT 9</th>
+                    <th contenteditable="true" oninput="syncGrantHeader(9, this.innerText)" onblur="saveToStorage()">GRANT 10</th>
+                    <th style="width: 30px;"></th>
+                    <th style="width: 70px;">TOTAL</th>
+                    
+                    <th class="divider-col"></th>
+                    
+                    <th style="width: 80px;">DATE</th>
+                    <th style="width: 100px;">ವಿವರಗಳು</th>
+                    <th id="exp-head-0">SCHOOL GRANT</th>
+                    <th id="exp-head-1">PTA MEETING</th>
+                    <th id="exp-head-2">ECO CLUB</th>
+                    <th id="exp-head-3">LBA GRANT</th>
+                    <th id="exp-head-4">UDISE+</th>
+                    <th id="exp-head-5">SDMC TRG</th>
+                    <th id="exp-head-6">LIBRARY</th>
+                    <th id="exp-head-7">TLM GRANT</th>
+                    <th id="exp-head-8">GRANT 9</th>
+                    <th id="exp-head-9">GRANT 10</th>
+                    <th style="width: 30px;"></th>
+                    <th style="width: 70px;">TOTAL</th>
+                </tr>
+            </thead>
+            <tbody id="ledgerBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const grantCols = ['g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8', 'g9', 'g10'];
+
+    window.onload = function() {
+        if (!loadFromStorage()) {
+            addNewBlock(true);
+        }
+    };
+
+    function syncGrantHeader(index, text) {
+        const expHeader = document.getElementById(`exp-head-${index}`);
+        if(expHeader) expHeader.innerText = text;
+    }
+
+    function addNewBlock(isFirst = false) {
+        const tbody = document.getElementById("ledgerBody");
+        const blockIndex = tbody.querySelectorAll(".block-row-1").length;
+
+        const row1 = document.createElement("tr");
+        row1.className = `block-row-1 block-${blockIndex}`;
+        
+        let receiptPraCols = '';
+        if (blockIndex === 0) {
+            receiptPraCols = grantCols.map(c => `<td><input type="number" class="inp-pra-${c}" value="0" oninput="recalculateAll()"></td>`).join('');
+        } else {
+            receiptPraCols = grantCols.map(c => `<td class="val-cell pra-${c} bg-calc">0</td>`).join('');
+        }
+
+        row1.innerHTML = `
+            <td><input type="date" class="b-date" value="${blockIndex === 0 ? '2025-12-01' : ''}" onchange="syncDate(${blockIndex}, this.value)"></td>
+            <td class="lbl-pra">ಪ್ರಾ ಶಿಲ್ಕು</td>
+            ${receiptPraCols}
+            <td></td>
+            <td class="val-cell pra-total bg-calc">0</td>
+            
+            <td class="divider-col"></td>
+            
+            <td><input type="date" class="b-date-exp" value="${blockIndex === 0 ? '2025-12-01' : ''}" onchange="saveToStorage()"></td>
+            <td class="lbl-pra">ಪ್ರಾ ಶಿಲ್ಕು</td>
+            ${grantCols.map(c => `<td class="val-cell exp-pra-${c} bg-exp-pra">0</td>`).join('')}
+            <td></td>
+            <td class="val-cell exp-pra-total bg-exp-pra">0</td>
+        `;
+
+        const row2 = document.createElement("tr");
+        row2.className = `block-row-2 block-${blockIndex}`;
+        row2.innerHTML = `
+            <td></td>
+            <td class="lbl-jama">ಜಮಾ</td>
+            ${grantCols.map(c => `<td><input type="number" class="inp-jama-${c}" value="0" oninput="recalculateAll()"></td>`).join('')}
+            <td></td>
+            <td class="val-cell jama-total bg-calc">0</td>
+            
+            <td class="divider-col"></td>
+            
+            <td></td>
+            <td class="lbl-kharchu">ಖರ್ಚು</td>
+            ${grantCols.map(c => `<td><input type="number" class="inp-kharchu-${c}" value="0" oninput="recalculateAll()"></td>`).join('')}
+            <td></td>
+            <td class="val-cell kharchu-total bg-calc">0</td>
+        `;
+
+        const row3 = document.createElement("tr");
+        row3.className = `block-row-3 block-${blockIndex} block-separator`;
+        row3.innerHTML = `
+            <td></td>
+            <td class="lbl-ottu">ಒಟ್ಟು</td>
+            ${grantCols.map(c => `<td class="val-cell ottu-${c} bg-highlight">0</td>`).join('')}
+            <td></td>
+            <td class="val-cell ottu-total bg-highlight">0</td>
+            
+            <td class="divider-col"></td>
+            
+            <td></td>
+            <td class="lbl-antim">ಅಂ.ಶಿಲ್ಕು</td>
+            ${grantCols.map(c => `<td class="val-cell antim-${c} bg-closing">0</td>`).join('')}
+            <td></td>
+            <td class="val-cell antim-total bg-closing">0</td>
+        `;
+
+        tbody.appendChild(row1);
+        tbody.appendChild(row2);
+        tbody.appendChild(row3);
+
+        recalculateAll();
+    }
+
+    function syncDate(blockIdx, val) {
+        const row1 = document.querySelector(`.block-row-1.block-${blockIdx}`);
+        if(row1) {
+            row1.querySelector('.b-date-exp').value = val;
+        }
+        saveToStorage();
+    }
+
+    function recalculateAll() {
+        const blockCount = document.querySelectorAll(".block-row-1").length;
+        let prevClosing = {};
+
+        for (let i = 0; i < blockCount; i++) {
+            const r1 = document.querySelector(`.block-row-1.block-${i}`);
+            const r2 = document.querySelector(`.block-row-2.block-${i}`);
+            const r3 = document.querySelector(`.block-row-3.block-${i}`);
+
+            let currentOttu = {};
+            let currentAntim = {};
+
+            let rowPraTotal = 0;
+            let rowJamaTotal = 0;
+            let rowOttuTotal = 0;
+
+            let rowExpPraTotal = 0;
+            let rowKharchuTotal = 0;
+            let rowAntimTotal = 0;
+
+            grantCols.forEach(c => {
+                let praVal = 0;
+                
+                if (i === 0) {
+                    const inp = r1.querySelector(`.inp-pra-${c}`);
+                    praVal = parseFloat(inp ? inp.value : 0) || 0;
+                } else {
+                    praVal = prevClosing[c] || 0;
+                    r1.querySelector(`.pra-${c}`).innerText = praVal;
+                }
+                rowPraTotal += praVal;
+
+                const jamaVal = parseFloat(r2.querySelector(`.inp-jama-${c}`).value) || 0;
+                rowJamaTotal += jamaVal;
+
+                const ottuVal = praVal + jamaVal;
+                currentOttu[c] = ottuVal;
+                r3.querySelector(`.ottu-${c}`).innerText = ottuVal;
+                rowOttuTotal += ottuVal;
+
+                const expPraVal = ottuVal;
+                r1.querySelector(`.exp-pra-${c}`).innerText = expPraVal;
+                rowExpPraTotal += expPraVal;
+
+                const kharchuVal = parseFloat(r2.querySelector(`.inp-kharchu-${c}`).value) || 0;
+                rowKharchuTotal += kharchuVal;
+
+                const antimVal = expPraVal - kharchuVal;
+                currentAntim[c] = antimVal;
+                r3.querySelector(`.antim-${c}`).innerText = antimVal;
+                rowAntimTotal += antimVal;
+            });
+
+            r1.querySelector(`.pra-total`).innerText = rowPraTotal;
+            r1.querySelector(`.exp-pra-total`).innerText = rowExpPraTotal;
+            
+            r2.querySelector(`.jama-total`).innerText = rowJamaTotal;
+            r2.querySelector(`.kharchu-total`).innerText = rowKharchuTotal;
+            
+            r3.querySelector(`.ottu-total`).innerText = rowOttuTotal;
+            r3.querySelector(`.antim-total`).innerText = rowAntimTotal;
+
+            prevClosing = { ...currentAntim };
+        }
+
+        saveToStorage();
+    }
+
+    // Auto-Save System
+    function saveToStorage() {
+        const data = {
+            title: document.getElementById("hdrTitle").innerText,
+            school: document.getElementById("hdrSchool").innerText,
+            headers: [],
+            blocks: []
+        };
+
+        const ths = document.querySelectorAll("#grantHeaders th[contenteditable='true']");
+        ths.forEach(th => data.headers.push(th.innerText));
+
+        const blockCount = document.querySelectorAll(".block-row-1").length;
+        for (let i = 0; i < blockCount; i++) {
+            const r1 = document.querySelector(`.block-row-1.block-${i}`);
+            const r2 = document.querySelector(`.block-row-2.block-${i}`);
+
+            let blockData = {
+                dateReceipt: r1.querySelector(".b-date").value,
+                dateExpense: r1.querySelector(".b-date-exp").value,
+                pra: {},
+                jama: {},
+                kharchu: {}
+            };
+
+            grantCols.forEach(c => {
+                if (i === 0) {
+                    const inpPra = r1.querySelector(`.inp-pra-${c}`);
+                    blockData.pra[c] = inpPra ? inpPra.value : 0;
+                }
+                blockData.jama[c] = r2.querySelector(`.inp-jama-${c}`).value;
+                blockData.kharchu[c] = r2.querySelector(`.inp-kharchu-${c}`).value;
+            });
+
+            data.blocks.push(blockData);
+        }
+
+        localStorage.setItem("pfms_cash_ledger_data", JSON.stringify(data));
+    }
+
+    function loadFromStorage() {
+        const saved = localStorage.getItem("pfms_cash_ledger_data");
+        if (!saved) return false;
+
+        const data = JSON.parse(saved);
+
+        if (data.title) document.getElementById("hdrTitle").innerText = data.title;
+        if (data.school) document.getElementById("hdrSchool").innerText = data.school;
+
+        if (data.headers && data.headers.length > 0) {
+            const ths = document.querySelectorAll("#grantHeaders th[contenteditable='true']");
+            ths.forEach((th, idx) => {
+                if (data.headers[idx] !== undefined) {
+                    th.innerText = data.headers[idx];
+                    syncGrantHeader(idx, data.headers[idx]);
+                }
+            });
+        }
+
+        document.getElementById("ledgerBody").innerHTML = "";
+
+        if (data.blocks && data.blocks.length > 0) {
+            data.blocks.forEach((bData, idx) => {
+                addNewBlock(idx === 0);
+                const r1 = document.querySelector(`.block-row-1.block-${idx}`);
+                const r2 = document.querySelector(`.block-row-2.block-${idx}`);
+
+                r1.querySelector(".b-date").value = bData.dateReceipt || "";
+                r1.querySelector(".b-date-exp").value = bData.dateExpense || "";
+
+                grantCols.forEach(c => {
+                    if (idx === 0 && bData.pra && bData.pra[c] !== undefined) {
+                        const inpPra = r1.querySelector(`.inp-pra-${c}`);
+                        if (inpPra) inpPra.value = bData.pra[c];
+                    }
+                    if (bData.jama && bData.jama[c] !== undefined) {
+                        r2.querySelector(`.inp-jama-${c}`).value = bData.jama[c];
+                    }
+                    if (bData.kharchu && bData.kharchu[c] !== undefined) {
+                        r2.querySelector(`.inp-kharchu-${c}`).value = bData.kharchu[c];
+                    }
+                });
+            });
+            recalculateAll();
+            return true;
+        }
+        return false;
+    }
+
+    function manualSave() {
+        saveToStorage();
+        alert("✅ ನಿಮ್ಮ ಎಲ್ಲಾ ಎಂಟ್ರಿಗಳು ಯಶಸ್ವಿಯಾಗಿ ಸೇವ್ ಆಗಿವೆ!");
+    }
+
+    function resetLedger() {
+        if (confirm("⚠️ ಖಚಿತವಾಗಿ ಹೊಸದಾಗಿ ಪ್ರಾರಂಭಿಸಲು ಬಯಸುತ್ತೀರಾ? ಹಳೆಯ ಎಲ್ಲಾ ಎಂಟ್ರಿಗಳು ಅಳಿಸಲ್ಪಡುತ್ತವೆ.")) {
+            localStorage.removeItem("pfms_cash_ledger_data");
+            location.reload();
+        }
+    }
+
+    // AppsGeyser App ಗೆ ಅನುಕೂಲವಾಗುವಂತೆ PDF/Print ಜನರೇಷನ್ ಫಂಕ್ಷನ್
+    function generatePDF() {
+        const toolbar = document.querySelector('.toolbar');
+        toolbar.style.display = 'none'; // ಪ್ರಿಂಟ್ ಆಗುವಾಗ ಬಟನ್‌ಗಳನ್ನು ಹೈಡ್ ಮಾಡುವುದು
+
+        const element = document.getElementById('printableArea');
+        const opt = {
+            margin:       0.2,
+            filename:     'PFMS_Cash_Ledger.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'in', format: 'a3', orientation: 'landscape' }
+        };
+
+        html2pdf().set(opt).from(element).save().then(() => {
+            toolbar.style.display = 'flex'; // ಡೌನ್‌ಲೋಡ್ ಆದ ನಂತರ ಬಟನ್‌ಗಳನ್ನು ಮತ್ತೆ ತೋರಿಸುವುದು
+        }).catch(() => {
+            toolbar.style.display = 'flex';
+        });
+    }
+</script>
+
+</body>
+</html>
